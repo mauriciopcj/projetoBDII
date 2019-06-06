@@ -111,22 +111,22 @@ $$ LANGUAGE 'plpgsql';
 /* INSERTS TABELA CONTA */
 
 INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('10000000000', '9','despesas', 'S', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11000000000', '9', 'despesas mensais', 'S', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11010000000', '9', 'salários', 'S', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11010100000', '9', 'área administrativa', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11010200000', '9', 'área comercial', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020000000', '9', 'contas mensais', 'S', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020100000', '9', 'telefone', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020200000', '9', 'internet', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020300000', '9', 'energia elétrica', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020400000', '9', 'água', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11000000000', '2', 'despesas mensais', 'S', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11010000000', '8', 'salários', 'S', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11010100000', '5', 'área administrativa', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11010200000', '2', 'área comercial', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020000000', '3', 'contas mensais', 'S', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020100000', '&', 'telefone', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020200000', '8', 'internet', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020300000', '5', 'energia elétrica', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020400000', '2', 'água', 'A', 'S');
 INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030000000', '9', 'infraestrutura', 'S', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030100000', '9', 'alugueis de prédios', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030200000', '9', 'equipamentos', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030300000', '9', 'computadores', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12000000000', '9', 'imprevistos', 'S', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12010000000', '9', 'impostos', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12020000000', '9', 'juros bancários', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12030000000', '9', 'multas e taxas diversas', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030100000', '6', 'alugueis de prédios', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030200000', '3', 'equipamentos', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030300000', '&', 'computadores', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12000000000', '6', 'imprevistos', 'S', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12010000000', '1', 'impostos', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12020000000', '7', 'juros bancários', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12030000000', '2', 'multas e taxas diversas', 'A', 'S');
 
 -- SELECT * FROM conta;
