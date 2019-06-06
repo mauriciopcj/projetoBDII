@@ -92,21 +92,19 @@ RETURNS TABLE (
 	saldo_atual numeric(9,2)
 )
 AS $$
-DECLARE
-	salAnt numeric(9,2);
-	salAtu numeric(9,2);
-	linha RECORD;
 BEGIN
-	SELECT INTO salAnt saldo FROM saldos WHERE saldos.ano = ano;
-	IF mes = 1 THEN
-		SELECT INTO salAnt saldo FROM saldos WHERE saldos.ano = ano-1 AND saldos.numconta = numero;
-	ELSE
-		SELECT INTO salAnt saldo FROM saldos WHERE saldos.ano = ano AND saldos.numconta = numero;
-	END IF;
-	FOR linha IN SELECT credito, debito FROM debcred WHERE CAST(substring(debcred.mesano FROM 2 for 4) AS integer) = ano LOOP
-		salAtu := salAtu + (credito - debito);
-	END LOOP;
-	salAtu := salAtu + salAnt;
+	RETURN QUERY
+		SELECT saldos.saldo AS "anterior", 
+			SUM(debCred.credito) AS "totCred", 
+			SUM(debCred.debito) AS "totDeb", 
+			saldos.saldo + (debCred.credito - debCred.debito) AS "atual"
+		FROM Saldos JOIN DebCred ON Saldos.numConta = DebCred.numConta
+		WHERE saldos.ano = ano 
+			AND debCred.numConta = numero
+			AND CAST(substring(debCred.mesAno FROM 0 FOR 2) AS integer) < mes
+			AND CAST(substring(debCred.mesAno FROM 2 FOR 4) AS integer) = ano
+		GROUP BY 1, 4;
+		
 END; 
 $$ LANGUAGE 'plpgsql';
 
