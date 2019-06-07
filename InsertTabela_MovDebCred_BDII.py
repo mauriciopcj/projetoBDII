@@ -25,12 +25,15 @@ vetor = ['11010100000','11010200000','11020100000','11020200000','11020300000','
 #---------------
 # loop maravilha
 
-for i in range(40):
+contador = 0
+while(contador < 1000):
     conta = random.randrange(0,12)      # escolhe uma conta do vetor
     dia = random.randrange(1, 29)       # está ate 28 para não dar erro em fevereiro
-    mes = random.randrange(1, 5)        # movimentações de janeiro a abril
-    ano = random.randrange(2019, 2020)  # configurado pra 2019
+    mes = random.randrange(1, 13)        # movimentações de janeiro a abril
+    ano = random.randrange(2018, 2020)  # configurado pra 2019
     debcred = 'DC'                      # no print ele escolhe entre Debito ou Credito
     valor = random.randrange(20, 401)
-    print("INSERT INTO MovDebCred (numConta, dig, data, debCred, valor) VALUES ({}, '{}', '{}-{}-{}', '{}', {});"
-          .format(vetor[conta], verificar_digito(vetor[conta]), dia, mes, ano, debcred[random.randrange(0,2)], valor))
+    if(((ano == 2019) and (mes < 5)) or (ano < 2019)):
+        contador += 1
+        print("INSERT INTO MovDebCred (numConta, dig, data, debCred, valor) VALUES ({}, '{}', '{}-{}-{}', '{}', {});"
+              .format(vetor[conta], verificar_digito(vetor[conta]), dia, mes, ano, debcred[random.randrange(0,2)], valor))
