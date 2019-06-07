@@ -1439,4 +1439,3 @@ INSERT INTO MovDebCred (numConta, dig, data, debCred, valor) VALUES (12020000000
 INSERT INTO MovDebCred (numConta, dig, data, debCred, valor) VALUES (12010000000, '1', '26-8-2018', 'C', 124);
 INSERT INTO MovDebCred (numConta, dig, data, debCred, valor) VALUES (11020100000, '&', '10-2-2018', 'C', 94);
 INSERT INTO MovDebCred (numConta, dig, data, debCred, valor) VALUES (11030100000, '6', '1-1-2019', 'D', 21);
->>> 
