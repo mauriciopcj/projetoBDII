@@ -84,6 +84,37 @@ $$ LANGUAGE 'plpgsql';
 
 /* STORED PROCEDURE - 7.3.b */
 
+/* STORED PROCEDURE - 7.3.c */
+	
+CREATE OR REPLACE FUNCTION critica (mes integer, ano integer)
+RETURNS BOOLEAN
+AS $$
+DECLARE
+	numconta varchar(11) :='';
+	dig numeric := 0;
+	tipo varchar(1) := '';
+	
+BEGIN
+	SELECT INTO numconta,dig  mdc.numconta, mdc.dig
+	FROM movdebcred as mdc
+	WHERE CAST(to_char(mdc.data, 'MM') as integer) = mes 
+	AND CAST(to_char(mdc.data, 'YYYY') as integer) = ano;
+	SELECT INTO tipo conta.tipo 
+	FROM conta 
+	WHERE conta.numconta = numconta;
+	IF numconta = null THEN
+		RETURN FALSE;
+	ELSIF verifica_digito(numconta) != dig THEN
+		RETURN FALSE;
+	ELSIF  tipo = 'S' THEN
+		RETURN FALSE;
+	END IF;
+	RETURN TRUE;
+END; 
+$$ LANGUAGE 'plpgsql';
+	
+/* STORED PROCEDURE - 7.3.c */
+
 /* STORED FUNCTION - 7.4.a */
 
 CREATE OR REPLACE FUNCTION verifica_digito (numero varchar)
