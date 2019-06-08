@@ -52,6 +52,38 @@ CREATE TABLE MovDebCred (
 
 SELECT numConta, ano, saldo_anterior,tot_credito,tot_debito, saldo_atual FROM 
 
+/* STORED PROCEDURE - 7.3.b */
+
+CREATE OR REPLACE PROCEDURE transporte (ano integer)
+AS $$
+DECLARE
+	movsaldos NO SCROLL CURSOR
+	FOR	SELECT saldos.numconta, saldos.saldo, sum(debcred.credito), sum(debcred.debito)
+	FROM saldos JOIN debcred ON saldos.numconta = debcred.numconta
+	where CAST(SUBSTRING(debcred.mesano FROM 2 FOR 4) AS integer) = ano
+	GROUP BY 1,2;
+	numconta varchar(11) :='';
+	saldo numeric := 0;
+	cred numeric := 0;
+	deb numeric := 0;
+	total numeric := 0;
+	
+BEGIN
+	OPEN movsaldos;
+	LOOP
+		FETCH movsaldos into numconta,saldo,cred,deb;
+		EXIT WHEN NOT FOUND;
+		total := saldo+cred-deb;
+		INSERT INTO saldos (numconta, ano, saldo)
+		VALUES (numconta, ano+1, total);
+	END LOOP;
+	CLOSE movsaldos;
+	COMMIT;
+END; 
+$$ LANGUAGE 'plpgsql';
+
+/* STORED PROCEDURE - 7.3.b */
+
 /* STORED FUNCTION - 7.4.a */
 
 CREATE OR REPLACE FUNCTION verifica_digito (numero varchar)
