@@ -28,14 +28,14 @@ AS $$
 	END;
 $$;
 
-/* REMOVE FORMATO NUMERO DE CONTA (Transforma diretamente em BIGINT) */
+/* REMOVE FORMATO NUMERO DE CONTA */
 
 CREATE OR REPLACE FUNCTION unformat_account_number( account_number varchar )
-RETURNS bigint
+RETURNS varchar
 LANGUAGE 'plpgsql'
 AS $$
 	BEGIN
-		RETURN CAST(REPLACE(CAST(account_number AS VARCHAR), '.', '') AS bigint);
+		RETURN REPLACE(CAST(account_number AS VARCHAR), '.', '');
 	END;
 $$;
 
@@ -61,5 +61,36 @@ AS $$
 			END IF;
 		END LOOP;
 		RETURN 6 - counter;
+	END;
+$$;
+
+
+/* PEGAR COMEÇO DA CONTA SUPERIOR */
+
+CREATE OR REPLACE FUNCTION get_last_account_level( formated_account_number varchar )
+RETURNS varchar
+LANGUAGE 'plpgsql'
+AS $$
+	DECLARE
+		last_level smallint;
+		cleaver smallint;
+	BEGIN
+		last_level := get_account_level(formated_account_number);
+		CASE last_level
+			WHEN 2 THEN
+				cleaver := 1;
+			WHEN 3 THEN
+				cleaver := 2;
+			WHEN 4 THEN
+				cleaver := 4;
+			WHEN 5 THEN
+				cleaver := 6;
+			WHEN 6 THEN
+				cleaver := 9;
+		END CASE;
+		RETURN substring(
+			CAST(unformat_account_number(formated_account_number) AS varchar)
+			from 1 for cleaver
+		);
 	END;
 $$;
