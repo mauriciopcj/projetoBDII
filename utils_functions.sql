@@ -38,3 +38,28 @@ AS $$
 		RETURN CAST(REPLACE(CAST(account_number AS VARCHAR), '.', '') AS bigint);
 	END;
 $$;
+
+
+/* PEGAR LEVEL DA CONTA PELO NUMERO DE CONTA FORMATADO */
+
+CREATE OR REPLACE FUNCTION get_account_level( formated_account_number varchar )
+RETURNS smallint
+LANGUAGE 'plpgsql'
+AS $$
+	DECLARE
+		counter smallint := 0;
+		reversed_acc varchar;
+	BEGIN
+		reversed_acc := REVERSE(formated_account_number);
+		FOR i IN 1..16 LOOP
+			IF substring(reversed_acc from i for 1) = '0' THEN
+				CONTINUE;
+			ELSIF substring(reversed_acc from i for 1) = '.' THEN
+				counter = counter + 1;
+			ELSE
+				EXIT;
+			END IF;
+		END LOOP;
+		RETURN 6 - counter;
+	END;
+$$;
