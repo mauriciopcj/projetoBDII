@@ -52,6 +52,31 @@ CREATE TABLE MovDebCred (
 
 SELECT numConta, ano, saldo_anterior,tot_credito,tot_debito, saldo_atual FROM 
 
+/* TRIGGER  */
+
+
+CREATE OR REPLACE FUNCTION has_superior_accounts()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+	DECLARE
+		total_superior_accounts smallint;
+    BEGIN
+		total_superior_accounts := (
+			SELECT COUNT(*) FROM conta
+			WHERE numconta LIKE get_last_account_level(format_account_number(NEW.numconta)) || '%'
+		);
+		IF total_superior_accounts < 1 AND get_account_level(format_account_number(NEW.numconta)) > 1 THEN
+			RAISE EXCEPTION E'Account % does not have any superiors', NEW.numconta;
+		END IF;
+		RETURN NEW;
+	END;
+$$;
+
+
+CREATE TRIGGER validate_account_number BEFORE INSERT ON conta
+FOR EACH ROW EXECUTE PROCEDURE has_superior_accounts();
+
 /* STORED PROCEDURE - 7.3.b */
 
 CREATE OR REPLACE PROCEDURE transporte (ano integer)
