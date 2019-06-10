@@ -2,7 +2,7 @@
 
 /* FORMATA NUMERO DE CONTA DE INTEIRO PARA STRING COM MASCARA (pontos) */
 
-CREATE OR REPLACE FUNCTION format_account_number( account_number bigint )
+CREATE OR REPLACE FUNCTION format_account_number( account_number VARCHAR )
 RETURNS VARCHAR
 LANGUAGE 'plpgsql'
 AS $$
