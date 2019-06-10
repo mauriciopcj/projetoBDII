@@ -1,3 +1,7 @@
+
+
+/* FORMATA NUMERO DE CONTA DE INTEIRO PARA STRING COM MASCARA (pontos) */
+
 CREATE OR REPLACE FUNCTION format_account_number( account_number bigint )
 RETURNS VARCHAR
 LANGUAGE 'plpgsql'
@@ -21,5 +25,16 @@ AS $$
 			END IF;
 		END LOOP;
 		RETURN formated_value;
+	END;
+$$;
+
+/* REMOVE FORMATO NUMERO DE CONTA (Transforma diretamente em BIGINT) */
+
+CREATE OR REPLACE FUNCTION unformat_account_number( account_number varchar )
+RETURNS bigint
+LANGUAGE 'plpgsql'
+AS $$
+	BEGIN
+		RETURN CAST(REPLACE(CAST(account_number AS VARCHAR), '.', '') AS bigint);
 	END;
 $$;
