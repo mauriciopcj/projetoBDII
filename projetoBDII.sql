@@ -82,18 +82,16 @@ BEGIN
 END; 
 $$ LANGUAGE 'plpgsql';
 
-/* STORED PROCEDURE - 7.3.b */
-
 /* STORED PROCEDURE - 7.3.c */
-	
+
+/* RETURN TRUE OR FALSE
+
 CREATE OR REPLACE FUNCTION critica (mes integer, ano integer)
-RETURNS BOOLEAN
-AS $$
+RETURNS BOOLEAN AS $$
 DECLARE
 	numconta varchar(11) :='';
 	dig numeric := 0;
 	tipo varchar(1) := '';
-	
 BEGIN
 	SELECT INTO numconta,dig  mdc.numconta, mdc.dig
 	FROM movdebcred as mdc
@@ -111,9 +109,32 @@ BEGIN
 	END IF;
 	RETURN TRUE;
 END; 
+$$ LANGUAGE 'plpgsql'; */
+
+/*
+SELECT identificador AS "NSU", numero_conta AS "Numero Inserido",
+	dig_insert AS "Digito Inserido",dig_ok AS "Digito Correto",tipo_conta AS "Tipo" 
+FROM critica(4,2019);
+*/
+
+-- DROP FUNCTION critica(integer,integer)
+
+CREATE OR REPLACE FUNCTION critica (mes integer, ano integer)
+RETURNS TABLE (identificador integer,
+			   numero_conta char(11),  
+			   dig_insert char(1), 
+			   dig_ok varchar(1), 
+			   tipo_conta char(1))
+AS $$
+DECLARE
+BEGIN
+	RETURN QUERY SELECT mdc.nsu, mdc.numconta, mdc.dig, verifica_digito(mdc.numconta), conta.tipo
+	FROM (SELECT * FROM MovDebCred WHERE CAST(to_char(data, 'MM') as integer) = mes
+	AND CAST(to_char(data, 'YYYY') as integer) = ano ORDER BY numconta, debcred) AS mdc 
+	LEFT OUTER JOIN conta ON conta.numconta = mdc.numconta
+	WHERE conta.tipo = 'S' OR mdc.dig <> verifica_digito(mdc.numconta) OR conta.numconta IS NULL;
+END; 
 $$ LANGUAGE 'plpgsql';
-	
-/* STORED PROCEDURE - 7.3.c */
 
 /* STORED FUNCTION - 7.4.a */
 
