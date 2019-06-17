@@ -28,19 +28,19 @@ $$;
 
 /* REMOVE FORMATO NUMERO DE CONTA */
 
-CREATE OR REPLACE FUNCTION unformat_account_number( account_number varchar )
+CREATE OR REPLACE FUNCTION unformat_account_number( formated_account_number varchar )
 RETURNS varchar
 LANGUAGE 'plpgsql'
 AS $$
 	BEGIN
-		RETURN REPLACE(CAST(account_number AS VARCHAR), '.', '');
+		RETURN REPLACE(account_number, '.', '');
 	END;
 $$;
 
 
 /* PEGAR LEVEL DA CONTA PELO NUMERO DE CONTA FORMATADO */
 
-CREATE OR REPLACE FUNCTION get_account_level( formated_account_number varchar )
+CREATE OR REPLACE FUNCTION get_account_level( account_number varchar )
 RETURNS smallint
 LANGUAGE 'plpgsql'
 AS $$
@@ -48,7 +48,7 @@ AS $$
 		counter smallint := 0;
 		reversed_acc varchar;
 	BEGIN
-		reversed_acc := REVERSE(formated_account_number);
+		reversed_acc := REVERSE(format_account_number(account_number));
 		FOR i IN 1..16 LOOP
 			IF substring(reversed_acc from i for 1) = '0' THEN
 				CONTINUE;
@@ -65,7 +65,7 @@ $$;
 
 /* PEGAR COMEÇO DA CONTA SUPERIOR */
 
-CREATE OR REPLACE FUNCTION get_last_account_level( formated_account_number varchar )
+CREATE OR REPLACE FUNCTION get_last_account_level( account_number varchar )
 RETURNS varchar
 LANGUAGE 'plpgsql'
 AS $$
@@ -73,7 +73,7 @@ AS $$
 		last_level smallint;
 		cleaver smallint;
 	BEGIN
-		last_level := get_account_level(formated_account_number);
+		last_level := get_account_level(account_number);
 		CASE last_level
 			WHEN 2 THEN
 				cleaver := 1;
@@ -85,10 +85,16 @@ AS $$
 				cleaver := 6;
 			WHEN 6 THEN
 				cleaver := 9;
+			ELSE
+				--  do nothing
 		END CASE;
-		RETURN substring(
-			CAST(unformat_account_number(formated_account_number) AS varchar)
-			from 1 for cleaver
+		RETURN RPAD(
+			substring(
+				account_number
+				from 1 for cleaver
+			),
+			11,
+			'0'
 		);
 	END;
 $$;

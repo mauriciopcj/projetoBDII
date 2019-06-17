@@ -64,9 +64,9 @@ AS $$
     BEGIN
 		total_superior_accounts := (
 			SELECT COUNT(*) FROM conta
-			WHERE numconta LIKE get_last_account_level(format_account_number(NEW.numconta)) || '%'
+			WHERE numconta LIKE get_last_account_level(format_account_number(NEW.numconta))
 		);
-		IF total_superior_accounts < 1 AND get_account_level(format_account_number(NEW.numconta)) > 1 THEN
+		IF total_superior_accounts < 1 AND get_account_level(NEW.numconta) > 1 THEN
 			RAISE EXCEPTION E'Account % does not have any superiors', NEW.numconta;
 		END IF;
 		RETURN NEW;
@@ -231,27 +231,51 @@ ORDER BY cc.numconta, date_part('year', cc.data);
 
 SELECT * FROM MovDebCred
 
-CREATE OR REPLACE PROCEDURE atualizaTabelaDebCred(
-	novoNumero varchar(11),
-	mesEano varchar(6))
-LANGUAGE plpgsql
-AS $$
-DECLARE
-	linha RECORD;
-	cred numeric(9,2) := 0;
-	deb numeric(9,2) := 0;
-BEGIN	
-	FOR linha IN SELECT numconta,  date_part('year', data),  SUM(valor) FROM MovDebCred
-		WHERE date_part('month', data) = CAST(substring(mesEano FROM 0 FOR 2) AS integer) AND numconta = novoNumero
-		GROUP BY numconta, debcred , date_part('year', data)
-		ORDER BY numconta, date_part('year', data); LOOP
-		IF linha.debcred == 'C' THEN
-			cred := linha.debcred;
-		ELSE
-			deb := linha.debcred;
-		END IF;
-	END LOOP;
-	INSERT INTO DebCred VALUES (novoNumero, mesEano, cred, deb);
-END; $$;
 
 */
+
+CREATE OR REPLACE PROCEDURE atualizaTabelaDebCred(
+	mes integer,
+	ano integer
+)
+LANGUAGE 'plpgsql'
+AS $$
+	DECLARE
+		linha RECORD;
+		selected_mesano varchar := CONCAT(
+			LPAD(CAST(mes AS varchar), 2, '0'), CAST(ano AS varchar)
+		);
+	BEGIN
+		FOR linha IN SELECT numconta, debcred, SUM(valor) AS total FROM MovDebCred
+			WHERE date_part('month', data) = 1 AND date_part('year', data) = 2019
+			GROUP BY numconta, debcred
+			ORDER BY numconta LOOP
+			IF EXISTS (SELECT FROM DebCred WHERE numConta = linha.numConta AND mesano = selected_mesano) THEN
+				IF linha.debcred = 'C' THEN
+					UPDATE DebCred SET credito = linha.total WHERE numConta = linha.numConta AND mesano = selected_mesano;
+				ELSE
+					UPDATE DebCred SET debito = linha.total WHERE numConta = linha.numConta AND mesano = selected_mesano;
+				END IF;
+			ELSE
+				IF linha.debcred = 'C' THEN
+					INSERT INTO DebCred (numConta, mesano, credito, debito) 
+						VALUES (
+							linha.numConta,
+							selected_mesano,
+							linha.total,
+							0
+						);
+				ELSE
+					INSERT INTO DebCred (numConta, mesano, credito, debito) 
+						VALUES (
+							linha.numConta,
+							selected_mesano,
+							0,
+							linha.total
+						);
+				END IF;
+			END IF;
+		END LOOP;
+		COMMIT;
+	END;
+$$;
