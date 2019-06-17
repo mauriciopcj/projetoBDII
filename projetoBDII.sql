@@ -64,7 +64,7 @@ AS $$
     BEGIN
 		total_superior_accounts := (
 			SELECT COUNT(*) FROM conta
-			WHERE numconta LIKE get_last_account_level(format_account_number(NEW.numconta))
+			WHERE numconta LIKE get_last_account_level(NEW.numconta)
 		);
 		IF total_superior_accounts < 1 AND get_account_level(NEW.numconta) > 1 THEN
 			RAISE EXCEPTION E'Account % does not have any superiors', NEW.numconta;
