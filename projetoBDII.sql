@@ -233,21 +233,23 @@ SELECT * FROM MovDebCred
 
 
 */
-
 CREATE OR REPLACE PROCEDURE atualizaTabelaDebCred(
-	mes integer,
-	ano integer
+	mesS integer,
+	anoS integer
 )
 LANGUAGE 'plpgsql'
 AS $$
 	DECLARE
 		linha RECORD;
 		selected_mesano varchar := CONCAT(
-			LPAD(CAST(mes AS varchar), 2, '0'), CAST(ano AS varchar)
+			LPAD(CAST(mesS AS varchar), 2, '0'), CAST(anoS AS varchar)
 		);
+		total int := 0;
 	BEGIN
-		FOR linha IN SELECT numconta, debcred, SUM(valor) AS total FROM MovDebCred
-			WHERE date_part('month', data) = 1 AND date_part('year', data) = 2019
+		FOR linha IN SELECT mv.numconta, mv.debcred, SUM(mv.valor) AS total FROM MovDebCred AS mv
+			JOIN conta AS conta ON conta.numconta = mv.numconta
+			WHERE date_part('month', mv.data) = mesS AND date_part('year', mv.data) = anoS AND
+			conta.tipo = 'A' AND conta.ativa = 'S'
 			GROUP BY numconta, debcred
 			ORDER BY numconta LOOP
 			IF EXISTS (SELECT FROM DebCred WHERE numConta = linha.numConta AND mesano = selected_mesano) THEN
@@ -275,7 +277,10 @@ AS $$
 						);
 				END IF;
 			END IF;
+			COMMIT;
 		END LOOP;
-		COMMIT;
+		IF mesS = 12 THEN
+			transporte(anoS);
+		END IF;
 	END;
 $$;
