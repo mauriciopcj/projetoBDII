@@ -79,33 +79,33 @@ FOR EACH ROW EXECUTE PROCEDURE has_superior_accounts();
 
 /* STORED PROCEDURE - 7.3.b */
 
-CREATE OR REPLACE PROCEDURE transporte (ano integer)
+CREATE PROCEDURE transporte(anoS integer)
 AS $$
 DECLARE
-	movsaldos NO SCROLL CURSOR
-	FOR	SELECT saldos.numconta, saldos.saldo, sum(debcred.credito), sum(debcred.debito)
-	FROM saldos JOIN debcred ON saldos.numconta = debcred.numconta
-	where CAST(SUBSTRING(debcred.mesano FROM 2 FOR 4) AS integer) = ano
-	GROUP BY 1,2;
 	numconta varchar(11) :='';
 	saldo numeric := 0;
 	cred numeric := 0;
 	deb numeric := 0;
 	total numeric := 0;
-	
+	linha RECORD;
 BEGIN
-	OPEN movsaldos;
+	FOR linha in SELECT debcred.numconta as conta, saldos.saldo as sald, sum(debcred.credito) as credito, sum(debcred.debito) as debito
+	FROM saldos RIGHT OUTER JOIN debcred ON saldos.numconta = debcred.numconta
+	WHERE CAST(SUBSTRING(debcred.mesano FROM 3 FOR 4) AS integer) = anoS
+	group by 1,2
 	LOOP
-		FETCH movsaldos into numconta,saldo,cred,deb;
-		EXIT WHEN NOT FOUND;
+		IF (linha.sald != NULL) THEN
+			saldo = linha.sald;
+		END IF;
+		numconta := linha.conta;
+		cred := linha.credito;
+		deb := linha.debito;
 		total := saldo+cred-deb;
 		INSERT INTO saldos (numconta, ano, saldo)
-		VALUES (numconta, ano+1, total);
+		VALUES (numconta, anoS+1, total);
 	END LOOP;
-	CLOSE movsaldos;
-	COMMIT;
-END; 
-$$ LANGUAGE 'plpgsql';
+END; $$
+LANGUAGE 'plpgsql';
 
 /* STORED PROCEDURE - 7.3.c */
 
