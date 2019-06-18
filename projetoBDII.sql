@@ -205,7 +205,7 @@ BEGIN
 		FROM Saldos JOIN DebCred ON Saldos.numConta = DebCred.numConta
 		WHERE saldos.ano = anoNovo
 			AND debCred.numConta = numero
-			AND CAST(substring(debCred.mesAno FROM 0 FOR 2) AS integer) < mes
+			AND CAST(substring(debCred.mesAno FROM 0 FOR 2) AS integer) <= mes
 			AND CAST(substring(debCred.mesAno FROM 2 FOR 4) AS integer) = anoNovo
 		GROUP BY 1, 4;
 		
@@ -246,41 +246,53 @@ AS $$
 		);
 		total int := 0;
 	BEGIN
-		FOR linha IN SELECT mv.numconta, mv.debcred, SUM(mv.valor) AS total FROM MovDebCred AS mv
-			JOIN conta AS conta ON conta.numconta = mv.numconta
+		FOR linha IN SELECT mv.numconta AS numconta, mv.debcred, SUM(mv.valor) AS total
+			FROM MovDebCred AS mv JOIN conta AS conta ON conta.numconta = mv.numconta
 			WHERE date_part('month', mv.data) = mesS AND date_part('year', mv.data) = anoS AND
-			conta.tipo = 'A' AND conta.ativa = 'S'
-			GROUP BY numconta, debcred
+			conta.tipo = 'A' AND conta.ativa = 'S' AND mv.debcred = 'C'
+			GROUP BY mv.numconta, mv.debcred
 			ORDER BY numconta LOOP
-			IF EXISTS (SELECT FROM DebCred WHERE numConta = linha.numConta AND mesano = selected_mesano) THEN
-				IF linha.debcred = 'C' THEN
-					UPDATE DebCred SET credito = linha.total WHERE numConta = linha.numConta AND mesano = selected_mesano;
-				ELSE
-					UPDATE DebCred SET debito = linha.total WHERE numConta = linha.numConta AND mesano = selected_mesano;
-				END IF;
-			ELSE
-				IF linha.debcred = 'C' THEN
-					INSERT INTO DebCred (numConta, mesano, credito, debito) 
-						VALUES (
-							linha.numConta,
-							selected_mesano,
-							linha.total,
-							0
-						);
-				ELSE
-					INSERT INTO DebCred (numConta, mesano, credito, debito) 
-						VALUES (
-							linha.numConta,
-							selected_mesano,
-							0,
-							linha.total
-						);
-				END IF;
-			END IF;
-			COMMIT;
+                SELECT INTO total SUM(valor) FROM MovDebCred
+                    WHERE date_part('month', data) = mesS AND date_part('year', data) = anoS AND
+                    numConta = linha.numConta AND debcred = 'D';
+                INSERT INTO DebCred (numConta, mesano, credito, debito) 
+                    VALUES (
+                        linha.numConta,
+                        selected_mesano,
+                        linha.total,
+                        total
+                    );
 		END LOOP;
 		IF mesS = 12 THEN
 			transporte(anoS);
 		END IF;
 	END;
 $$;
+
+
+
+CREATE OR REPLACE FUNCTION update_superior_accounts()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+	DECLARE
+		superior_conta varchar := get_last_account_level(NEW.numconta);
+    BEGIN
+		IF get_account_level(NEW.numconta) = 1 THEN
+			RETURN NEW;
+		END IF;
+		INSERT INTO DebCred AS dc (numConta, mesano, credito, debito) 
+			VALUES (
+				superior_conta,
+				NEW.mesano,
+				NEW.credito,
+				NEW.debito
+			) ON CONFLICT (numConta, mesano) DO UPDATE
+				SET credito = dc.credito + NEW.credito, debito = dc.debito + NEW.debito;
+		RETURN NEW;
+	END;
+$$;
+
+
+CREATE TRIGGER validate_account_number BEFORE INSERT OR UPDATE ON DebCred
+FOR EACH ROW EXECUTE PROCEDURE update_superior_accounts();
