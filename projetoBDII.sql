@@ -263,55 +263,157 @@ AS $$
 		selected_mesano varchar := CONCAT(
 			LPAD(CAST(mesS AS varchar), 2, '0'), CAST(anoS AS varchar)
 		);
-		total int := 0;
+		total_deb int := 0;
 	BEGIN
-		FOR linha IN SELECT mv.numconta AS numconta, mv.debcred, SUM(mv.valor) AS total
+		FOR linha IN SELECT mv.numconta AS numconta, mv.debcred, SUM(mv.valor) AS total_cred
 			FROM MovDebCred AS mv JOIN conta AS conta ON conta.numconta = mv.numconta
 			WHERE date_part('month', mv.data) = mesS AND date_part('year', mv.data) = anoS AND
 			conta.tipo = 'A' AND conta.ativa = 'S' AND mv.debcred = 'C'
 			GROUP BY mv.numconta, mv.debcred
 			ORDER BY numconta LOOP
-                SELECT INTO total SUM(valor) FROM MovDebCred
+                SELECT INTO total_deb SUM(valor) FROM MovDebCred
                     WHERE date_part('month', data) = mesS AND date_part('year', data) = anoS AND
                     numConta = linha.numConta AND debcred = 'D';
                 INSERT INTO DebCred (numConta, mesano, credito, debito) 
                     VALUES (
                         linha.numConta,
                         selected_mesano,
-                        linha.total,
-                        total
+                        linha.total_cred,
+                        total_deb
                     );
+				CALL update_superior_accounts(linha.numConta, selected_mesano, linha.total_cred, total_deb);
+				COMMIT;
 		END LOOP;
 		IF mesS = 12 THEN
-			transporte(anoS);
+			CALL transporte(anoS);
 		END IF;
 	END;
 $$;
 
 
 
-CREATE OR REPLACE FUNCTION update_superior_accounts()
-RETURNS TRIGGER
+CREATE OR REPLACE PROCEDURE update_superior_accounts(
+	numcontaN varchar,
+	mesanoN varchar,
+	creditoN numeric,
+	debitoN numeric
+)
 LANGUAGE plpgsql
 AS $$
 	DECLARE
-		superior_conta varchar := get_last_account_level(NEW.numconta);
+		superior_conta varchar := get_last_account_level(numcontaN);
     BEGIN
-		IF get_account_level(NEW.numconta) = 1 THEN
-			RETURN NEW;
+		IF get_account_level(numcontaN) = 1 THEN
+			RETURN;
 		END IF;
 		INSERT INTO DebCred AS dc (numConta, mesano, credito, debito) 
 			VALUES (
 				superior_conta,
-				NEW.mesano,
-				NEW.credito,
-				NEW.debito
+				mesanoN,
+				creditoN,
+				debitoN
 			) ON CONFLICT (numConta, mesano) DO UPDATE
-				SET credito = dc.credito + NEW.credito, debito = dc.debito + NEW.debito;
-		RETURN NEW;
+				SET credito = dc.credito + creditoN, debito = dc.debito + debitoN;
+		CALL update_superior_accounts(superior_conta, mesanoN, creditoN, debitoN);
 	END;
 $$;
 
 
-CREATE TRIGGER validate_account_number BEFORE INSERT OR UPDATE ON DebCred
-FOR EACH ROW EXECUTE PROCEDURE update_superior_accounts();
+/* FORMATA NUMERO DE CONTA DE INTEIRO PARA STRING COM MASCARA (pontos) */
+
+CREATE OR REPLACE FUNCTION format_account_number( account_number VARCHAR )
+RETURNS VARCHAR
+LANGUAGE 'plpgsql'
+AS $$
+	DECLARE
+		mask VARCHAR := 'X.X.XX.XX.XXX.XX';
+		formated_value VARCHAR := '';
+		interator integer := 1;
+	BEGIN
+		FOR i IN 1..16 LOOP
+			IF substring(mask from i for 1) = 'X' THEN
+				formated_value = CONCAT(
+					formated_value,
+					substring(account_number from interator for 1)
+				);
+				interator = interator + 1;
+			ELSE
+				formated_value = CONCAT(formated_value, '.');
+			END IF;
+		END LOOP;
+		RETURN formated_value;
+	END;
+$$;
+
+/* REMOVE FORMATO NUMERO DE CONTA */
+
+CREATE OR REPLACE FUNCTION unformat_account_number( formated_account_number varchar )
+RETURNS varchar
+LANGUAGE 'plpgsql'
+AS $$
+	BEGIN
+		RETURN REPLACE(account_number, '.', '');
+	END;
+$$;
+
+
+/* PEGAR LEVEL DA CONTA PELO NUMERO DE CONTA FORMATADO */
+
+CREATE OR REPLACE FUNCTION get_account_level( account_number varchar )
+RETURNS smallint
+LANGUAGE 'plpgsql'
+AS $$
+	DECLARE
+		counter smallint := 0;
+		reversed_acc varchar;
+	BEGIN
+		reversed_acc := REVERSE(format_account_number(account_number));
+		FOR i IN 1..16 LOOP
+			IF substring(reversed_acc from i for 1) = '0' THEN
+				CONTINUE;
+			ELSIF substring(reversed_acc from i for 1) = '.' THEN
+				counter = counter + 1;
+			ELSE
+				EXIT;
+			END IF;
+		END LOOP;
+		RETURN 6 - counter;
+	END;
+$$;
+
+
+/* PEGAR COMEÇO DA CONTA SUPERIOR */
+
+CREATE OR REPLACE FUNCTION get_last_account_level( account_number varchar )
+RETURNS varchar
+LANGUAGE 'plpgsql'
+AS $$
+	DECLARE
+		last_level smallint;
+		cleaver smallint;
+	BEGIN
+		last_level := get_account_level(account_number);
+		CASE last_level
+			WHEN 2 THEN
+				cleaver := 1;
+			WHEN 3 THEN
+				cleaver := 2;
+			WHEN 4 THEN
+				cleaver := 4;
+			WHEN 5 THEN
+				cleaver := 6;
+			WHEN 6 THEN
+				cleaver := 9;
+			ELSE
+				--  do nothing
+		END CASE;
+		RETURN RPAD(
+			substring(
+				account_number
+				from 1 for cleaver
+			),
+			11,
+			'0'
+		);
+	END;
+$$;
