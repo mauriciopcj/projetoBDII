@@ -368,25 +368,25 @@ $$;
 
 CREATE OR REPLACE FUNCTION critica_checagem (mes integer, ano integer)	
 RETURNS BOOLEAN AS $$	
-DECLARE	
-	numconta varchar(11) :='';	
-	dig numeric := 0;	
-	tipo varchar(1) := '';	
-BEGIN	
-	SELECT INTO numconta,dig  mdc.numconta, mdc.dig	
-	FROM movdebcred as mdc	
-	WHERE CAST(to_char(mdc.data, 'MM') as integer) = mes 	
-	AND CAST(to_char(mdc.data, 'YYYY') as integer) = ano;	
-	SELECT INTO tipo conta.tipo 	
-	FROM conta 	
-	WHERE conta.numconta = numconta;	
-	IF numconta = null THEN	
-		RETURN FALSE;	
-	ELSIF verifica_digito(numconta) != dig THEN	
-		RETURN FALSE;	
-	ELSIF  tipo = 'S' THEN	
-		RETURN FALSE;	
-	END IF;	
-	RETURN TRUE;	
-END; 	
+DECLARE
+	tipo char(1);
+	linha RECORD;
+BEGIN
+	FOR linha IN (SELECT mdc.numconta, mdc.dig
+	FROM movdebcred as mdc
+	WHERE CAST(to_char(mdc.data, 'MM') as integer) = mes
+	AND CAST(to_char(mdc.data, 'YYYY') as integer) = ano) LOOP
+		SELECT INTO tipo conta.tipo
+			FROM conta
+			WHERE conta.numconta = linha.numconta;
+		IF linha.numconta = null THEN
+			RETURN FALSE;
+		ELSIF verifica_digito(linha.numconta) != linha.dig THEN
+			RETURN FALSE;
+		ELSIF  tipo = 'S' THEN
+			RETURN FALSE;
+		END IF;
+	END LOOP;
+	RETURN True;
+END;	
 $$ LANGUAGE 'plpgsql';
