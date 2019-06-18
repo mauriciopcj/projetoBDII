@@ -283,7 +283,7 @@ AS $$
                     );
 		END LOOP;
 		IF mesS = 12 THEN
-			transporte(anoS);
+			CALL transporte(anoS);
 		END IF;
 	END;
 $$;
