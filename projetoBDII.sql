@@ -195,27 +195,7 @@ BEGIN
 END; 
 $$ LANGUAGE 'plpgsql';
 
--- TESTES EM AVALIACAO
 
-/*
-SELECT * FROM MovDebCred;
-
-SELECT cc.numconta,  date_part('year', cc.data), cc.debcred, SUM(cc.valor),dd.debcred, SUM(dd.valor)
-FROM MovDebCred AS cc JOIN MovDebCred AS dd ON cc.numconta = dd.numconta
-WHERE date_part('month', cc.data) = 1 AND cc.numconta = '11010100000' AND dd.numconta = '11010100000' AND cc.debcred = 'C' AND dd.debcred = 'D'
-GROUP BY cc.numconta, cc.debcred,dd.debcred , date_part('year', cc.data),cc.debcred
-ORDER BY cc.numconta, date_part('year', cc.data);
-
-SELECT cc.numconta,  date_part('year', cc.data), cc.debcred, SUM(cc.valor)
-FROM MovDebCred AS cc
-WHERE date_part('month', cc.data) = 1 AND cc.numconta = '11010100000'
-GROUP BY cc.numconta, cc.debcred, date_part('year', cc.data),cc.debcred
-ORDER BY cc.numconta, date_part('year', cc.data);
-
-SELECT * FROM MovDebCred
-
-
-*/
 CREATE OR REPLACE PROCEDURE atualizaTabelaDebCred(
 	mesS integer,
 	anoS integer
@@ -229,6 +209,9 @@ AS $$
 		);
 		total_deb int := 0;
 	BEGIN
+		IF NOT critica_checagem(mesS, anoS) THEN
+			RAISE EXCEPTION 'Dados inconsistentes verifique a critica';
+		END IF;
 		FOR linha IN SELECT mv.numconta AS numconta, mv.debcred, SUM(mv.valor) AS total_cred
 			FROM MovDebCred AS mv JOIN conta AS conta ON conta.numconta = mv.numconta
 			WHERE date_part('month', mv.data) = mesS AND date_part('year', mv.data) = anoS AND
@@ -381,3 +364,29 @@ AS $$
 		);
 	END;
 $$;
+
+
+CREATE OR REPLACE FUNCTION critica_checagem (mes integer, ano integer)	
+RETURNS BOOLEAN AS $$	
+DECLARE	
+	numconta varchar(11) :='';	
+	dig numeric := 0;	
+	tipo varchar(1) := '';	
+BEGIN	
+	SELECT INTO numconta,dig  mdc.numconta, mdc.dig	
+	FROM movdebcred as mdc	
+	WHERE CAST(to_char(mdc.data, 'MM') as integer) = mes 	
+	AND CAST(to_char(mdc.data, 'YYYY') as integer) = ano;	
+	SELECT INTO tipo conta.tipo 	
+	FROM conta 	
+	WHERE conta.numconta = numconta;	
+	IF numconta = null THEN	
+		RETURN FALSE;	
+	ELSIF verifica_digito(numconta) != dig THEN	
+		RETURN FALSE;	
+	ELSIF  tipo = 'S' THEN	
+		RETURN FALSE;	
+	END IF;	
+	RETURN TRUE;	
+END; 	
+$$ LANGUAGE 'plpgsql';
