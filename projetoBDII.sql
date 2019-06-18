@@ -62,7 +62,7 @@ CREATE VIEW viu as (SELECT
 	
 	SUM(debCred.debito) AS "totDeb", 
 	
-	(SUM(debCred.credito) - SUM(debCred.debito)) AS "atual"
+	(saldos.saldo + SUM(debCred.credito) - SUM(debCred.debito)) AS "atual"
 	
 FROM Saldos RIGHT OUTER JOIN DebCred ON Saldos.numConta = DebCred.numConta
 	
@@ -126,42 +126,6 @@ BEGIN
 END; $$
 LANGUAGE 'plpgsql';
 
-/* STORED PROCEDURE - 7.3.c */
-
-/* RETURN TRUE OR FALSE
-
-CREATE OR REPLACE FUNCTION critica (mes integer, ano integer)
-RETURNS BOOLEAN AS $$
-DECLARE
-	numconta varchar(11) :='';
-	dig numeric := 0;
-	tipo varchar(1) := '';
-BEGIN
-	SELECT INTO numconta,dig  mdc.numconta, mdc.dig
-	FROM movdebcred as mdc
-	WHERE CAST(to_char(mdc.data, 'MM') as integer) = mes 
-	AND CAST(to_char(mdc.data, 'YYYY') as integer) = ano;
-	SELECT INTO tipo conta.tipo 
-	FROM conta 
-	WHERE conta.numconta = numconta;
-	IF numconta = null THEN
-		RETURN FALSE;
-	ELSIF verifica_digito(numconta) != dig THEN
-		RETURN FALSE;
-	ELSIF  tipo = 'S' THEN
-		RETURN FALSE;
-	END IF;
-	RETURN TRUE;
-END; 
-$$ LANGUAGE 'plpgsql'; */
-
-/*
-SELECT identificador AS "NSU", numero_conta AS "Numero Inserido",
-	dig_insert AS "Digito Inserido",dig_ok AS "Digito Correto",tipo_conta AS "Tipo" 
-FROM critica(4,2019);
-*/
-
--- DROP FUNCTION critica(integer,integer)
 
 CREATE OR REPLACE FUNCTION critica (mes integer, ano integer)
 RETURNS TABLE (identificador integer,
@@ -224,8 +188,8 @@ BEGIN
 		FROM Saldos JOIN DebCred ON Saldos.numConta = DebCred.numConta
 		WHERE saldos.ano = anoNovo
 			AND debCred.numConta = numero
-			AND CAST(substring(debCred.mesAno FROM 0 FOR 2) AS integer) <= mes
-			AND CAST(substring(debCred.mesAno FROM 2 FOR 4) AS integer) = anoNovo
+			AND CAST(substring(debCred.mesAno FROM 1 FOR 2) AS integer) <= mes
+			AND CAST(substring(debCred.mesAno FROM 3 FOR 4) AS integer) = anoNovo
 		GROUP BY 1, 4;
 		
 END; 
@@ -274,6 +238,9 @@ AS $$
                 SELECT INTO total_deb SUM(valor) FROM MovDebCred
                     WHERE date_part('month', data) = mesS AND date_part('year', data) = anoS AND
                     numConta = linha.numConta AND debcred = 'D';
+				IF total_deb IS NULL THEN
+					total_deb := 0;
+				END IF;
                 INSERT INTO DebCred (numConta, mesano, credito, debito) 
                     VALUES (
                         linha.numConta,
@@ -284,9 +251,6 @@ AS $$
 				CALL update_superior_accounts(linha.numConta, selected_mesano, linha.total_cred, total_deb);
 				COMMIT;
 		END LOOP;
-		IF mesS = 12 THEN
-			CALL transporte(anoS);
-		END IF;
 	END;
 $$;
 

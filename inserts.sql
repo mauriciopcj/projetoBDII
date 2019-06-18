@@ -2,24 +2,24 @@
 -- SELECT * FROM Conta;
 -- TRUNCATE TABLE Conta
 
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('10000000000', '9','despesas', 'S', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11000000000', '9', 'despesas mensais', 'S', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11010000000', '9', 'salários', 'S', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11010100000', '9', 'área administrativa', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11010200000', '9', 'área comercial', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020000000', '9', 'contas mensais', 'S', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020100000', '9', 'telefone', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020200000', '9', 'internet', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020300000', '9', 'energia elétrica', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020400000', '9', 'água', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030000000', '9', 'infraestrutura', 'S', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030100000', '9', 'alugueis de prédios', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030200000', '9', 'equipamentos', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030300000', '9', 'computadores', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12000000000', '9', 'imprevistos', 'S', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12010000000', '9', 'impostos', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12020000000', '9', 'juros bancários', 'A', 'S');
-INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12030000000', '9', 'multas e taxas diversas', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('10000000000', verifica_digito('10000000000'),'despesas', 'S', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11000000000', verifica_digito('11000000000'), 'despesas mensais', 'S', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11010000000', verifica_digito('11010000000'), 'salários', 'S', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11010100000', verifica_digito('11010100000'), 'área administrativa', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11010200000', verifica_digito('11010200000'), 'área comercial', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020000000', verifica_digito('11020000000'), 'contas mensais', 'S', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020100000', verifica_digito('11020100000'), 'telefone', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020200000', verifica_digito('11020200000'), 'internet', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020300000', verifica_digito('11020300000'), 'energia elétrica', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11020400000', verifica_digito('11020400000'), 'água', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030000000', verifica_digito('11030000000'), 'infraestrutura', 'S', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030100000', verifica_digito('11030100000'), 'alugueis de prédios', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030200000', verifica_digito('11030200000'), 'equipamentos', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('11030300000', verifica_digito('11030300000'), 'computadores', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12000000000', verifica_digito('12000000000'), 'imprevistos', 'S', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12010000000', verifica_digito('12010000000'), 'impostos', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12020000000', verifica_digito('12020000000'), 'juros bancários', 'A', 'S');
+INSERT INTO Conta (numconta, dig, nome, tipo, ativa) VALUES ('12030000000', verifica_digito('12030000000'), 'multas e taxas diversas', 'A', 'S');
 
 /* INSERTS TABELA MOVDEBCRED */
 -- SELECT * FROM MovDebCred;
