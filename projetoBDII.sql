@@ -50,7 +50,26 @@ CREATE TABLE MovDebCred (
 
 /* VIEW - 7.2 */
 
-SELECT numConta, ano, saldo_anterior,tot_credito,tot_debito, saldo_atual FROM 
+CREATE VIEW viu as (SELECT
+	
+	debcred.numconta,
+	
+	SUBSTRING(debcred.mesano FROM 3 FOR 4) as ano,
+	
+	saldos.saldo AS "anterior", 
+	
+	SUM(debCred.credito) AS "totCred", 
+	
+	SUM(debCred.debito) AS "totDeb", 
+	
+	(SUM(debCred.credito) - SUM(debCred.debito)) AS "atual"
+	
+FROM Saldos RIGHT OUTER JOIN DebCred ON Saldos.numConta = DebCred.numConta
+	
+	where CAST(substring(debCred.mesAno FROM 3 FOR 4) AS integer) = CAST(date_part('year', CURRENT_DATE) as integer)
+	
+GROUP BY 1,2,3
+	);
 
 /* TRIGGER  */
 
